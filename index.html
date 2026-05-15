@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de QR Decorado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #ffffff;
+            --surface-muted: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #059669;
+            --success-hover: #047857;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 70, 229, 0.35), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.15), transparent);
+            min-height: 100vh;
+            padding: 24px 16px 48px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .app-header {
+            max-width: 1140px;
+            margin: 0 auto 24px;
+            text-align: center;
+        }
+
+        .app-header h1 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            color: #f8fafc;
+            letter-spacing: -0.02em;
+        }
+
+        .app-header p {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .container {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: clamp(20px, 4vw, 32px);
+            max-width: 1140px;
+            width: 100%;
+            margin: 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 28px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-section {
+                position: static;
+            }
+        }
+
+        .form-section,
+        .preview-section {
+            background: var(--surface-muted);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+        }
+
+        .preview-section {
+            position: sticky;
+            top: 24px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title:not(:first-child) {
+            margin-top: 28px;
+        }
+
+        .panel-heading {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.8125rem;
+        }
+
+        .hint {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 6px;
+            display: block;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="number"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-family: inherit;
+            background: var(--surface);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 44px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            background: var(--surface);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 72px;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-group input[type="number"] {
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .option-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-top: 4px;
+        }
+
+        .option-card--highlight {
+            background: #fffbeb;
+            border-color: #fcd34d;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .preview-heading {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .preview-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .preview-card:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .preview-card__label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 10px 16px;
+            background: var(--surface-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-card__body {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 220px;
+        }
+
+        #qr-container,
+        #qr-decorado-container {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+            min-height: auto;
+            width: 100%;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #qrcode canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        #preview-decorado {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.97); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--text-muted);
+        }
+
+        .empty-state__icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .button-group--secondary {
+            margin-top: 12px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        button {
+            padding: 10px 18px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-muted);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+        }
+
+        .btn-warning {
+            background: transparent;
+            color: var(--warning);
+            border: 1px solid #fcd34d;
+            width: 100%;
+        }
+
+        .btn-warning:hover {
+            background: #fffbeb;
+        }
+
+        .feedback {
+            margin-top: 16px;
+            min-height: 24px;
+        }
+
+        .success-message,
+        .error-message {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            display: none;
+            padding: 10px 14px;
+            border-radius: var(--radius);
+        }
+
+        .success-message {
+            color: #065f46;
+            background: #d1fae5;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .error-message {
+            color: #991b1b;
+            background: #fee2e2;
+            margin-top: 6px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .loading::before {
+            content: '';
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            left: 24px;
+            max-width: 360px;
+            margin-left: auto;
+            padding: 14px 18px;
+            background: #0f172a;
+            color: #f8fafc;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(120%);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 480px) {
+            .button-group button {
+                flex: 1 1 100%;
+                min-width: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <h1>Generador de QR decorado</h1>
+        <p>Crea códigos QR con título e imagen de fondo para inventario y etiquetado</p>
+    </header>
+
+    <main class="container">
+        <div class="main-content">
+            <section class="form-section" aria-label="Configuración">
+                <h2 class="panel-heading">Configuración</h2>
+
+                <p class="section-title">Contenido</p>
+
+                <div class="form-group">
+                    <label for="url-input">URL o texto</label>
+                    <input type="url" id="url-input" placeholder="https://ejemplo.com/inventario/...">
+                    <div class="error-message" id="url-error">El campo no puede estar vacío</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="titulo-input">Título decorativo</label>
+                    <input type="text" id="titulo-input" placeholder="Ej: 20-17 Cisterna">
+                </div>
+
+                <p class="section-title">Código QR</p>
+
+                <div class="form-group">
+                    <label for="qr-size">Tamaño del QR (px)</label>
+                    <div class="input-group">
+                        <input type="range" id="qr-size" min="200" max="800" value="500" step="50">
+                        <input type="number" id="qr-size-display" value="500" min="200" max="800" step="50">
+                    </div>
+                </div>
+
+                <p class="section-title">Apariencia del resultado</p>
+
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="canvas-size">Canvas final</label>
+                        <select id="canvas-size">
+                            <option value="300">300 × 300</option>
+                            <option value="400">400 × 400</option>
+                            <option value="500">500 × 500</option>
+                            <option value="600">600 × 600</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="titulo-color">Color del título:</label>
+                        <input type="color" id="titulo-color" value="#ff0000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="titulo-size">Tamaño del título:</label>
+                        <div class="input-group">
+                            <input type="range" id="titulo-size" min="20" max="60" value="37" step="1">
+                            <input type="number" id="titulo-size-display" value="37" min="20" max="60" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fondo-input">Imagen de fondo</label>
+                    <input type="file" id="fondo-input" accept="image/*">
+                    <span class="hint">Opcional. Si no eliges archivo, se usa la imagen por defecto del proyecto.</span>
+                    <div class="option-card">
+                        <label class="checkbox-row">
+                            <input type="checkbox" id="sin-fondo">
+                            <span>Exportar sin imagen de fondo (fondo blanco)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="option-card option-card--highlight">
+                    <label class="checkbox-row">
+                        <input type="checkbox" id="auto-limpiar">
+                        <span>Limpiar formulario automáticamente después de guardar</span>
+                    </label>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn-primary" onclick="generarQR()">Regenerar QR</button>
+                    <button type="button" class="btn-success" onclick="guardarQR()">Guardar decorado</button>
+                    <button type="button" class="btn-secondary" onclick="descargarQRSimple()">Descargar simple</button>
+                </div>
+
+                <div class="button-group button-group--secondary">
+                    <button type="button" class="btn-warning" onclick="limpiarDatos()">Limpiar datos</button>
+                </div>
+
+                <div class="feedback">
+                    <div class="loading" id="loading">Generando imagen…</div>
+                    <div class="success-message" id="success-message">QR generado y descargado correctamente</div>
+                </div>
+            </section>
+
+            <section class="preview-section" aria-label="Vista previa">
+                <h2 class="preview-heading">Vista previa</h2>
+
+                <article class="preview-card">
+                    <div class="preview-card__label">QR simple</div>
+                    <div class="preview-card__body" id="qr-container">
+                        <div id="qrcode"></div>
+                        <div id="qr-placeholder" class="empty-state" style="display: none;">
+                            <div class="empty-state__icon" aria-hidden="true">▣</div>
+                            <p>Ingresa una URL para ver el código QR</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="preview-card">
+                    <div class="preview-card__label">QR decorado — resultado final</div>
+                    <div class="preview-card__body" id="qr-decorado-container">
+                        <canvas id="preview-decorado" hidden></canvas>
+                        <div id="preview-placeholder" class="empty-state">
+                            <div class="empty-state__icon" aria-hidden="true">◈</div>
+                            <p>La vista previa decorada aparecerá aquí</p>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        // Variables globales
+        let qrInstance = null;
+        let url = "http://192.168.1.107/inventario/nodos/1/2945e545-679d-4b20-9b6d-f38ba71927b4/0";
+        let titulo = "20-17 Cisterna";
+        let imagenFondo = 'img/WhatsApp Image 2024-12-30 at 3.48.57 PM.jpg';
+        let imagenFondoCargada = null;
+
+        let toastTimeout = null;
+
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.remove('show'), 3200);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('url-input').value = url;
+            document.getElementById('titulo-input').value = titulo;
+            inicializarEventos();
+            if (url.trim() !== '') {
+                generarQR();
+            } else {
+                document.getElementById('qr-placeholder').style.display = 'block';
+            }
+        });
+
+        function inicializarEventos() {
+            // Sincronizar sliders con inputs numéricos
+            document.getElementById('qr-size').addEventListener('input', function(e) {
+                document.getElementById('qr-size-display').value = e.target.value;
+                generarQR();
+            });
+
+            document.getElementById('qr-size-display').addEventListener('input', function(e) {
+                let value = Math.min(800, Math.max(200, parseInt(e.target.value) || 200));
+                document.getElementById('qr-size').value = value;
+                e.target.value = value;
+                generarQR();
+            });
+
+            document.getElementById('titulo-size').addEventListener('input', function(e) {
+                document.getElementById('titulo-size-display').value = e.target.value;
+            });
+
+            document.getElementById('titulo-size-display').addEventListener('input', function(e) {
+                let value = Math.min(60, Math.max(20, parseInt(e.target.value) || 37));
+                document.getElementById('titulo-size').value = value;
+                e.target.value = value;
+            });
+
+            // Regenerar QR cuando cambia la URL (con debounce)
+            let urlTimeout;
+            document.getElementById('url-input').addEventListener('input', function() {
+                clearTimeout(urlTimeout);
+                validarURL();
+                // Regenerar QR después de 500ms de inactividad
+                urlTimeout = setTimeout(() => {
+                    if (document.getElementById('url-input').value.trim() !== '') {
+                        generarQR();
+                    }
+                }, 500);
+            });
+
+            // Regenerar QR cuando cambia el título
+            document.getElementById('titulo-input').addEventListener('input', function() {
+                actualizarPreviewDecorado();
+            });
+
+            // Cargar imagen de fondo personalizada
+            document.getElementById('fondo-input').addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    let reader = new FileReader();
+                    reader.onload = function(event) {
+                        imagenFondoCargada = event.target.result;
+                        actualizarPreviewDecorado();
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            // Actualizar preview cuando cambian los parámetros
+            document.getElementById('canvas-size').addEventListener('change', actualizarPreviewDecorado);
+            document.getElementById('titulo-color').addEventListener('input', actualizarPreviewDecorado);
+            document.getElementById('titulo-size').addEventListener('input', function() {
+                document.getElementById('titulo-size-display').value = document.getElementById('titulo-size').value;
+                actualizarPreviewDecorado();
+            });
+            document.getElementById('titulo-size-display').addEventListener('input', function(e) {
+                let value = Math.min(60, Math.max(20, parseInt(e.target.value) || 37));
+                document.getElementById('titulo-size').value = value;
+                e.target.value = value;
+                actualizarPreviewDecorado();
+            });
+
+            document.getElementById('sin-fondo').addEventListener('change', actualizarPreviewDecorado);
+        }
+
+        function setPreviewDecoradoVisible(visible) {
+            const canvas = document.getElementById('preview-decorado');
+            const placeholder = document.getElementById('preview-placeholder');
+            canvas.hidden = !visible;
+            placeholder.style.display = visible ? 'none' : 'block';
+        }
+
+        function validarURL() {
+            let urlInput = document.getElementById('url-input').value;
+            let errorDiv = document.getElementById('url-error');
+            
+            if (urlInput.trim() === '') {
+                errorDiv.textContent = 'El campo URL no puede estar vacío';
+                errorDiv.classList.add('show');
+                return false;
+            }
+            
+            // Permitir cualquier texto, no solo URLs válidas
+            errorDiv.classList.remove('show');
+            return true;
+        }
+
+        function generarQR() {
+            url = document.getElementById('url-input').value.trim();
+            titulo = document.getElementById('titulo-input').value.trim() || 'Sin título';
+            
+            if (!validarURL()) {
+                document.getElementById('qrcode').innerHTML = '';
+                document.getElementById('qr-placeholder').style.display = 'block';
+                setPreviewDecoradoVisible(false);
+                return;
+            }
+
+            document.getElementById('qr-placeholder').style.display = 'none';
+
+            let qrSize = parseInt(document.getElementById('qr-size').value);
+            let container = document.getElementById('qrcode');
+            
+            // Limpiar contenedor
+            container.innerHTML = '';
+
+            // Crear nueva instancia de QR
+            qrInstance = new QRCode(container, {
+                text: url,
+                width: qrSize,
+                height: qrSize,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Actualizar vista previa decorada después de generar el QR
+            setTimeout(() => {
+                actualizarPreviewDecorado();
+            }, 300);
+        }
+
+        function actualizarPreviewDecorado() {
+            let qrCanvas = document.querySelector("#qrcode canvas");
+            if (!qrCanvas) {
+                setPreviewDecoradoVisible(false);
+                return;
+            }
+
+            url = document.getElementById('url-input').value.trim();
+            titulo = document.getElementById('titulo-input').value.trim() || 'Sin título';
+            
+            if (!url) {
+                setPreviewDecoradoVisible(false);
+                return;
+            }
+
+            let qrImage = new Image();
+            qrImage.src = qrCanvas.toDataURL("image/png");
+
+            qrImage.onload = function () {
+                let previewCanvas = document.getElementById("preview-decorado");
+                let ctx = previewCanvas.getContext("2d");
+
+                // Tamaño del canvas final (usar un tamaño fijo para preview, más pequeño)
+                let canvasSize = parseInt(document.getElementById('canvas-size').value);
+                // Para la preview, usar un tamaño máximo de 400px para que se vea bien
+                let previewSize = Math.min(canvasSize, 400);
+                previewCanvas.width = previewSize;
+                previewCanvas.height = previewSize;
+
+                // Limpiar canvas antes de dibujar
+                ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+                let sinFondo = document.getElementById('sin-fondo').checked;
+
+                // Crear esquinas redondeadas
+                let radius = 15;
+                ctx.beginPath();
+                ctx.moveTo(radius, 0);
+                ctx.lineTo(previewCanvas.width - radius, 0);
+                ctx.quadraticCurveTo(previewCanvas.width, 0, previewCanvas.width, radius);
+                ctx.lineTo(previewCanvas.width, previewCanvas.height - radius);
+                ctx.quadraticCurveTo(previewCanvas.width, previewCanvas.height, previewCanvas.width - radius, previewCanvas.height);
+                ctx.lineTo(radius, previewCanvas.height);
+                ctx.quadraticCurveTo(0, previewCanvas.height, 0, previewCanvas.height - radius);
+                ctx.lineTo(0, radius);
+                ctx.quadraticCurveTo(0, 0, radius, 0);
+                ctx.closePath();
+                ctx.clip();
+
+                // Calcular tamaño del QR en el canvas (proporcional al tamaño del preview)
+                let scaleFactor = previewSize / canvasSize;
+
+                // Tamaño del título (no demasiado pequeño)
+                let tituloColor = document.getElementById('titulo-color').value;
+                let tituloSize = parseInt(document.getElementById('titulo-size').value);
+                let tituloSizeScaled = Math.max(16, Math.min(tituloSize * scaleFactor, previewSize * 0.18));
+
+                let tituloY = previewSize * 0.05;
+                let espacioTitulo = tituloY + tituloSizeScaled + 10; // espacio para el título + margen
+                let espacioInferior = previewSize * 0.05;
+                let altoDisponibleQR = previewSize - espacioTitulo - espacioInferior;
+
+                let qrSizeInCanvas = Math.floor(Math.min(altoDisponibleQR, previewSize * 0.8));
+                let qrX = (previewSize - qrSizeInCanvas) / 2;
+                let qrY = espacioTitulo + (altoDisponibleQR - qrSizeInCanvas) / 2;
+
+                if (sinFondo) {
+                    // Fondo blanco sin imagen
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+                    // Dibujar el QR
+                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
+
+                    // Dibujar título
+                    ctx.fillStyle = tituloColor;
+                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 2;
+                    ctx.shadowOffsetY = 2;
+                    ctx.font = `bold ${tituloSizeScaled}px Arial, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(titulo, previewCanvas.width / 2, tituloY);
+                    setPreviewDecoradoVisible(true);
+                    return;
+                }
+
+                // Usar imagen de fondo personalizada o la por defecto
+                let fondo = new Image();
+                fondo.crossOrigin = "anonymous";
+                
+                if (imagenFondoCargada) {
+                    fondo.src = imagenFondoCargada;
+                } else {
+                    fondo.src = imagenFondo;
+                }
+
+                fondo.onload = function() {
+                    // Dibujar fondo
+                    ctx.drawImage(fondo, 0, 0, previewCanvas.width, previewCanvas.height);
+                    ctx.globalAlpha = 1.0;
+
+                    // Dibujar el QR
+                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
+
+                    ctx.fillStyle = tituloColor;
+                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 2;
+                    ctx.shadowOffsetY = 2;
+                    ctx.font = `bold ${tituloSizeScaled}px Arial, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(titulo, previewCanvas.width / 2, tituloY);
+                    setPreviewDecoradoVisible(true);
+                };
+
+                fondo.onerror = function() {
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+                    let qrSizeFallback = Math.floor(previewSize * 0.8);
+                    let qrXf = (previewSize - qrSizeFallback) / 2;
+                    let qrYf = (previewSize - qrSizeFallback) / 2;
+                    ctx.drawImage(qrImage, qrXf, qrYf, qrSizeFallback, qrSizeFallback);
+                    setPreviewDecoradoVisible(true);
+                };
+            };
+
+            qrImage.onerror = function() {
+                console.error('Error al cargar la imagen del QR para la vista previa');
+            };
+        }
+
+        function guardarQR() {
+            url = document.getElementById('url-input').value.trim();
+            titulo = document.getElementById('titulo-input').value.trim() || 'Sin título';
+            
+            if (!validarURL()) {
+                return;
+            }
+
+            // Regenerar QR si es necesario
+            if (!qrInstance || !document.querySelector("#qrcode canvas")) {
+                generarQR();
+                setTimeout(() => guardarQR(), 500);
+                return;
+            }
+
+            let loading = document.getElementById('loading');
+            loading.classList.add('show');
+
+            let qrCanvas = document.querySelector("#qrcode canvas");
+            if (!qrCanvas) {
+                loading.classList.remove('show');
+                alert('Error: No se pudo generar el código QR. Por favor, verifica la URL.');
+                return;
+            }
+
+            let qrImage = new Image();
+            qrImage.src = qrCanvas.toDataURL("image/png");
+
+            qrImage.onload = function () {
+                let canvas = document.createElement("canvas");
+                let ctx = canvas.getContext("2d");
+
+                // Tamaño del canvas final
+                let canvasSize = parseInt(document.getElementById('canvas-size').value);
+                canvas.width = canvasSize;
+                canvas.height = canvasSize;
+
+                let sinFondo = document.getElementById('sin-fondo').checked;
+
+                // Crear esquinas redondeadas
+                let radius = 15;
+                ctx.beginPath();
+                ctx.moveTo(radius, 0);
+                ctx.lineTo(canvas.width - radius, 0);
+                ctx.quadraticCurveTo(canvas.width, 0, canvas.width, radius);
+                ctx.lineTo(canvas.width, canvas.height - radius);
+                ctx.quadraticCurveTo(canvas.width, canvas.height, canvas.width - radius, canvas.height);
+                ctx.lineTo(radius, canvas.height);
+                ctx.quadraticCurveTo(0, canvas.height, 0, canvas.height - radius);
+                ctx.lineTo(0, radius);
+                ctx.quadraticCurveTo(0, 0, radius, 0);
+                ctx.closePath();
+                ctx.clip();
+
+                // Parámetros del título
+                let tituloColor = document.getElementById('titulo-color').value;
+                let tituloSize = parseInt(document.getElementById('titulo-size').value);
+                let tituloY = canvasSize * 0.05;
+
+                // Calcular tamaño del QR en el canvas dejando espacio para el título
+                let espacioTitulo = tituloY + tituloSize + 10;
+                let espacioInferior = canvasSize * 0.05;
+                let altoDisponibleQR = canvasSize - espacioTitulo - espacioInferior;
+                let qrSizeInCanvas = Math.floor(Math.min(altoDisponibleQR, canvasSize * 0.8)); // hasta 80% del alto
+                let qrX = (canvasSize - qrSizeInCanvas) / 2;
+                let qrY = espacioTitulo + (altoDisponibleQR - qrSizeInCanvas) / 2;
+
+                if (sinFondo) {
+                    // Fondo blanco sin imagen
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Dibujar el QR
+                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
+
+                    // Dibujar título
+                    ctx.fillStyle = tituloColor;
+                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 2;
+                    ctx.shadowOffsetY = 2;
+                    ctx.font = `bold ${tituloSize}px Arial, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(titulo, canvas.width / 2, tituloY);
+
+                    // Descargar imagen
+                    let imagenFinal = canvas.toDataURL("image/png");
+                    let link = document.createElement("a");
+                    link.href = imagenFinal;
+                    link.download = `QR_${titulo.replace(/[^a-z0-9]/gi, '_')}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    loading.classList.remove('show');
+
+                    // Mostrar mensaje de éxito
+                    mostrarExitoGuardado();
+
+                    if (document.getElementById('auto-limpiar').checked) {
+                        setTimeout(() => limpiarDatos(), 1000);
+                    }
+                    return;
+                }
+
+                // Usar imagen de fondo personalizada o la por defecto
+                let fondo = new Image();
+                fondo.crossOrigin = "anonymous";
+                
+                if (imagenFondoCargada) {
+                    fondo.src = imagenFondoCargada;
+                } else {
+                    fondo.src = imagenFondo;
+                }
+
+                fondo.onload = function() {
+                    // Dibujar fondo
+                    ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 1.0;
+
+                    // Dibujar el QR
+                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
+
+                    // Agregar título decorativo
+                    ctx.fillStyle = tituloColor;
+                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 2;
+                    ctx.shadowOffsetY = 2;
+                    ctx.font = `bold ${tituloSize}px Arial, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(titulo, canvas.width / 2, tituloY);
+
+                    // Descargar imagen
+                    let imagenFinal = canvas.toDataURL("image/png");
+                    let link = document.createElement("a");
+                    link.href = imagenFinal;
+                    link.download = `QR_${titulo.replace(/[^a-z0-9]/gi, '_')}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    loading.classList.remove('show');
+                    mostrarExitoGuardado();
+
+                    if (document.getElementById('auto-limpiar').checked) {
+                        setTimeout(() => limpiarDatos(), 1000);
+                    }
+                };
+
+                fondo.onerror = function() {
+                    loading.classList.remove('show');
+                    alert('Error al cargar la imagen de fondo. Verifica que la ruta sea correcta.');
+                };
+            };
+
+            qrImage.onerror = function() {
+                loading.classList.remove('show');
+                alert('Error al procesar el código QR.');
+            };
+        }
+
+        function mostrarExitoGuardado() {
+            const successMsg = document.getElementById('success-message');
+            successMsg.classList.add('show');
+            mostrarToast('QR descargado correctamente');
+            setTimeout(() => successMsg.classList.remove('show'), 3000);
+        }
+
+        function descargarQRSimple() {
+            if (!qrInstance || !document.querySelector("#qrcode canvas")) {
+                generarQR();
+                setTimeout(() => descargarQRSimple(), 500);
+                return;
+            }
+
+            let qrCanvas = document.querySelector("#qrcode canvas");
+            if (!qrCanvas) {
+                alert('Error: No se pudo generar el código QR.');
+                return;
+            }
+
+            let link = document.createElement("a");
+            link.href = qrCanvas.toDataURL("image/png");
+            link.download = "codigoQR_simple.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function limpiarDatos() {
+            // Limpiar campos de texto
+            document.getElementById('url-input').value = '';
+            document.getElementById('titulo-input').value = '';
+            
+            // Resetear valores por defecto
+            document.getElementById('qr-size').value = 500;
+            document.getElementById('qr-size-display').value = 500;
+            document.getElementById('canvas-size').value = 300;
+            document.getElementById('titulo-color').value = '#ff0000';
+            document.getElementById('titulo-size').value = 37;
+            document.getElementById('titulo-size-display').value = 37;
+            
+            // Limpiar imagen de fondo personalizada
+            document.getElementById('fondo-input').value = '';
+            imagenFondoCargada = null;
+            
+            // Limpiar QR del contenedor
+            document.getElementById('qrcode').innerHTML = '';
+            qrInstance = null;
+            
+            // Limpiar vista previa decorada
+            let previewCanvas = document.getElementById("preview-decorado");
+            if (previewCanvas) {
+                let ctx = previewCanvas.getContext("2d");
+                ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            }
+            
+            document.getElementById('qr-placeholder').style.display = 'block';
+            setPreviewDecoradoVisible(false);
+            document.getElementById('sin-fondo').checked = false;
+            document.getElementById('auto-limpiar').checked = false;
+            
+            // Limpiar mensajes
+            document.getElementById('url-error').classList.remove('show');
+            document.getElementById('success-message').classList.remove('show');
+            
+            // Resetear variables
+            url = '';
+            titulo = '';
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de QR para Equipos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #qr-container {
+            background: white;
+            padding: 20px;
+            display: inline-block;
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h2>Generador de QR para Equipos de Cómputo</h2>
+    
+    <div class="form-container">
+        <div class="form-group">
+            <label for="modelo">Modelo del Equipo:</label>
+            <input type="text" id="modelo" required>
+        </div>
+        <div class="form-group">
+            <label for="serial">Número de Serie:</label>
+            <input type="text" id="serial" required>
+        </div>
+        <div class="form-group">
+            <label for="procesador">Procesador:</label>
+            <input type="text" id="procesador" required>
+        </div>
+        <div class="form-group">
+            <label for="ram">Memoria RAM:</label>
+            <input type="text" id="ram" required>
+        </div>
+        <div class="form-group">
+            <label for="almacenamiento">Almacenamiento:</label>
+            <input type="text" id="almacenamiento" required>
+        </div>
+        <div class="form-group">
+            <label for="observaciones">Observaciones Adicionales (máximo 100 caracteres):</label>
+            <textarea id="observaciones" rows="3" maxlength="100" oninput="validarLongitud(this)"></textarea>
+            <small id="contador" style="color: #666; display: block; text-align: right;">0/100 caracteres</small>
+        </div>
+        <button onclick="generarQR()">Generar QR</button>
+        <button onclick="cargarDatosEjemplo()" style="background-color: #28a745; margin-left: 10px;">Cargar Datos de Ejemplo</button>
+    </div>
+
+    <div id="qr-container" style="display: none;">
+        <div id="qrcode"></div>
+    </div>
+
+    <script>
+        function validarLongitud(textarea) {
+            const maxLength = 100;
+            const currentLength = textarea.value.length;
+            const contador = document.getElementById('contador');
+            contador.textContent = `${currentLength}/${maxLength} caracteres`;
+            
+            if (currentLength > maxLength) {
+                textarea.value = textarea.value.substring(0, maxLength);
+            }
+        }
+
+        function generarQR() {
+            // Obtener valores del formulario
+            const modelo = document.getElementById('modelo').value;
+            const serial = document.getElementById('serial').value;
+            const procesador = document.getElementById('procesador').value;
+            const ram = document.getElementById('ram').value;
+            const almacenamiento = document.getElementById('almacenamiento').value;
+            const observaciones = document.getElementById('observaciones').value;
+
+            // Validar que no haya campos vacíos
+            if (!modelo || !serial || !procesador || !ram || !almacenamiento) {
+                alert("Por favor, complete todos los campos requeridos.");
+                return;
+            }
+
+            // Convertir a texto formateado
+            const textoQR = `ESPECIFICACIONES:
+M:${modelo}
+S:${serial}
+P:${procesador}
+R:${ram}
+A:${almacenamiento}
+O:${observaciones}`;
+
+            // Limpiar QR anterior si existe
+            document.getElementById('qrcode').innerHTML = '';
+            
+            try {
+                // Generar nuevo QR
+                new QRCode(document.getElementById("qrcode"), {
+                    text: textoQR,
+                    width: 300,
+                    height: 300,
+                    correctLevel: QRCode.CorrectLevel.L,
+                    callback: function() {
+                        // Descargar el QR inmediatamente después de generarlo
+                        let qrCanvas = document.querySelector("#qrcode canvas");
+                        let link = document.createElement("a");
+                        link.href = qrCanvas.toDataURL("image/png");
+                        link.download = `QR_${modelo.replace(/\s+/g, '_')}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                });
+            } catch (error) {
+                alert("Error al generar el código QR. Por favor, reduce la cantidad de texto en las observaciones.");
+                console.error(error);
+            }
+
+            // Mostrar contenedor del QR
+            document.getElementById('qr-container').style.display = 'block';
+        }
+
+        function cargarDatosEjemplo() {
+            document.getElementById('modelo').value = 'Dell Latitude 5420';
+            document.getElementById('serial').value = 'DELL-2024-5420-1234';
+            document.getElementById('procesador').value = 'Intel Core i7-1185G7';
+            document.getElementById('ram').value = '16GB DDR4';
+            document.getElementById('almacenamiento').value = 'SSD 512GB';
+            document.getElementById('observaciones').value = 'Equipo TI - Última mantención: 15/01/2024';
+            validarLongitud(document.getElementById('observaciones'));
+        }
+    </script>
+</body>
+</html>
