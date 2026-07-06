@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -303,6 +303,67 @@
             animation: fadeIn 0.4s ease-out;
         }
 
+        .shield-picker {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .shield-picker {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .shield-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 4px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            font-size: 0.625rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            width: 100%;
+            min-width: 0;
+            flex: unset;
+        }
+
+        .shield-option:hover {
+            border-color: #a5b4fc;
+            background: #f8fafc;
+        }
+
+        .shield-option.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            color: var(--primary);
+        }
+
+        .shield-option__icon {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .shield-option__icon--none {
+            font-size: 1.25rem;
+            line-height: 36px;
+            opacity: 0.5;
+        }
+
+        .color-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
         #preview-decorado {
             max-width: 100%;
             height: auto;
@@ -505,7 +566,7 @@
 
     <header class="app-header">
         <h1>Generador de QR decorado</h1>
-        <p>Crea códigos QR con título e imagen de fondo para inventario y etiquetado</p>
+        <p>Crea códigos QR personalizados con estilos, escudo central, título e imagen de fondo</p>
     </header>
 
     <main class="container">
@@ -536,6 +597,107 @@
                     </div>
                 </div>
 
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="qr-dot-style">Estilo de módulos</label>
+                        <select id="qr-dot-style">
+                            <option value="square">Cuadrados</option>
+                            <option value="rounded" selected>Redondeados</option>
+                            <option value="dots">Puntos</option>
+                            <option value="extra-rounded">Muy redondeados</option>
+                            <option value="classy">Clásico</option>
+                            <option value="classy-rounded">Clásico redondeado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qr-corner-square-style">Marco de esquinas</label>
+                        <select id="qr-corner-square-style">
+                            <option value="square">Cuadrado</option>
+                            <option value="dot">Punto</option>
+                            <option value="extra-rounded" selected>Muy redondeado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qr-corner-dot-style">Centro de esquinas</label>
+                        <select id="qr-corner-dot-style">
+                            <option value="square">Cuadrado</option>
+                            <option value="dot" selected>Punto</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Colores del QR</label>
+                    <div class="color-pair">
+                        <div>
+                            <label for="qr-color-dark" class="hint" style="margin-bottom:4px;">Módulos</label>
+                            <input type="color" id="qr-color-dark" value="#000000">
+                        </div>
+                        <div>
+                            <label for="qr-color-light" class="hint" style="margin-bottom:4px;">Fondo</label>
+                            <input type="color" id="qr-color-light" value="#ffffff">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Escudo o logo en el centro</label>
+                    <input type="hidden" id="qr-escudo-preset" value="none">
+                    <div class="shield-picker" id="shield-picker" role="group" aria-label="Escudo central">
+                        <button type="button" class="shield-option active" data-shield="none" title="Sin escudo">
+                            <span class="shield-option__icon shield-option__icon--none" aria-hidden="true">∅</span>
+                            <span>Ninguno</span>
+                        </button>
+                        <button type="button" class="shield-option" data-shield="shield-classic" title="Escudo clásico">
+                            <img class="shield-option__icon" id="shield-preview-classic" alt="">
+                            <span>Clásico</span>
+                        </button>
+                        <button type="button" class="shield-option" data-shield="shield-heraldic" title="Escudo heráldico">
+                            <img class="shield-option__icon" id="shield-preview-heraldic" alt="">
+                            <span>Heráldico</span>
+                        </button>
+                        <button type="button" class="shield-option" data-shield="shield-round" title="Escudo redondo">
+                            <img class="shield-option__icon" id="shield-preview-round" alt="">
+                            <span>Redondo</span>
+                        </button>
+                        <button type="button" class="shield-option" data-shield="shield-star" title="Escudo con estrella">
+                            <img class="shield-option__icon" id="shield-preview-star" alt="">
+                            <span>Estrella</span>
+                        </button>
+                        <button type="button" class="shield-option" data-shield="shield-emblem" title="Emblema">
+                            <img class="shield-option__icon" id="shield-preview-emblem" alt="">
+                            <span>Emblema</span>
+                        </button>
+                        <button type="button" class="shield-option" data-shield="custom" title="Imagen personalizada">
+                            <img class="shield-option__icon" id="shield-preview-custom" alt="" hidden>
+                            <span class="shield-option__icon shield-option__icon--none" id="shield-custom-placeholder" aria-hidden="true">+</span>
+                            <span>Propio</span>
+                        </button>
+                    </div>
+                    <input type="file" id="escudo-input" accept="image/*" style="margin-top:10px;">
+                    <span class="hint">Sube tu escudo, logo o escudo de equipo. Se recomienda PNG con fondo transparente.</span>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="qr-logo-size">Tamaño del escudo (%)</label>
+                        <div class="input-group">
+                            <input type="range" id="qr-logo-size" min="15" max="40" value="25" step="1">
+                            <input type="number" id="qr-logo-size-display" value="25" min="15" max="40" step="1">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qr-logo-margin">Margen del escudo (px)</label>
+                        <div class="input-group">
+                            <input type="range" id="qr-logo-margin" min="0" max="20" value="6" step="1">
+                            <input type="number" id="qr-logo-margin-display" value="6" min="0" max="20" step="1">
+                        </div>
+                    </div>
+                </div>
+
                 <p class="section-title">Apariencia del resultado</p>
 
                 <div class="settings-grid">
@@ -544,9 +706,12 @@
                         <select id="canvas-size">
                             <option value="300">300 × 300</option>
                             <option value="400">400 × 400</option>
-                            <option value="500">500 × 500</option>
+                            <option value="500" selected>500 × 500</option>
                             <option value="600">600 × 600</option>
+                            <option value="800">800 × 800</option>
+                            <option value="1024">1024 × 1024</option>
                         </select>
+                        <span class="hint">Usa 800 px o más para impresión nítida.</span>
                     </div>
 
                     <div class="form-group">
@@ -567,12 +732,19 @@
                     <label for="fondo-input">Imagen de fondo</label>
                     <input type="file" id="fondo-input" accept="image/*">
                     <span class="hint">Opcional. Si no eliges archivo, se usa la imagen por defecto del proyecto.</span>
-                    <div class="option-card">
-                        <label class="checkbox-row">
-                            <input type="checkbox" id="sin-fondo">
-                            <span>Exportar sin imagen de fondo (fondo blanco)</span>
-                        </label>
-                    </div>
+                </div>
+
+                <div class="option-card">
+                    <span class="hint" style="display:block;margin-bottom:10px;">Elementos del resultado decorado:</span>
+                    <label class="checkbox-row">
+                        <input type="checkbox" id="con-titulo" checked>
+                        <span>Incluir título decorativo</span>
+                    </label>
+                    <label class="checkbox-row" style="margin-top:10px;">
+                        <input type="checkbox" id="con-fondo" checked>
+                        <span>Incluir imagen de fondo</span>
+                    </label>
+                    <span class="hint">Si desactivas el fondo, se usará fondo blanco en la exportación.</span>
                 </div>
 
                 <div class="option-card option-card--highlight">
@@ -633,10 +805,212 @@
         let qrInstance = null;
         let url = "http://192.168.1.107/inventario/nodos/1/2945e545-679d-4b20-9b6d-f38ba71927b4/0";
         let titulo = "20-17 Cisterna";
-        let imagenFondo = 'img/WhatsApp Image 2024-12-30 at 3.48.57 PM.jpg';
+        let imagenFondo = 'img/WhatsApp Image 2024-12-30 at 3.48.57 .jpg';
         let imagenFondoCargada = null;
+        let escudoPersonalizado = null;
 
         let toastTimeout = null;
+
+        function svgToDataUrl(svg) {
+            return 'data:image/svg+xml,' + encodeURIComponent(svg.trim());
+        }
+
+        const ESCUDOS_PRESETS = {
+            'shield-classic': svgToDataUrl(`
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">
+                    <path d="M50 4 L92 22 L92 58 Q92 96 50 116 Q8 96 8 58 L8 22 Z" fill="#1e3a8a" stroke="#fbbf24" stroke-width="3"/>
+                    <path d="M50 18 L78 30 L78 56 Q78 82 50 98 Q22 82 22 56 L22 30 Z" fill="#2563eb" opacity="0.85"/>
+                </svg>
+            `),
+            'shield-heraldic': svgToDataUrl(`
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">
+                    <path d="M50 6 L88 24 L88 56 Q88 92 50 112 Q12 92 12 56 L12 24 Z" fill="#7f1d1d" stroke="#fcd34d" stroke-width="3"/>
+                    <path d="M50 28 L62 52 L88 52 L66 68 L74 94 L50 78 L26 94 L34 68 L12 52 L38 52 Z" fill="#fcd34d"/>
+                </svg>
+            `),
+            'shield-round': svgToDataUrl(`
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="#065f46" stroke="#6ee7b7" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="28" fill="#10b981" opacity="0.9"/>
+                    <text x="50" y="58" text-anchor="middle" font-size="28" font-weight="bold" fill="#ecfdf5" font-family="Arial,sans-serif">QR</text>
+                </svg>
+            `),
+            'shield-star': svgToDataUrl(`
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">
+                    <path d="M50 8 L90 26 L90 58 Q90 94 50 114 Q10 94 10 58 L10 26 Z" fill="#4c1d95" stroke="#c4b5fd" stroke-width="3"/>
+                    <polygon points="50,32 58,54 82,54 63,68 71,90 50,76 29,90 37,68 18,54 42,54" fill="#fbbf24"/>
+                </svg>
+            `),
+            'shield-emblem': svgToDataUrl(`
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">
+                    <path d="M50 5 L95 28 L95 60 Q95 98 50 115 Q5 98 5 60 L5 28 Z" fill="#0f172a" stroke="#94a3b8" stroke-width="3"/>
+                    <rect x="30" y="38" width="40" height="30" rx="4" fill="#f8fafc"/>
+                    <rect x="38" y="46" width="8" height="14" fill="#0f172a"/>
+                    <rect x="54" y="46" width="8" height="14" fill="#0f172a"/>
+                    <rect x="42" y="58" width="16" height="4" fill="#0f172a"/>
+                </svg>
+            `)
+        };
+
+        function inicializarEscudosPreset() {
+            Object.keys(ESCUDOS_PRESETS).forEach(function(key) {
+                const suffix = key.replace('shield-', '');
+                const img = document.getElementById('shield-preview-' + suffix);
+                if (img) img.src = ESCUDOS_PRESETS[key];
+            });
+        }
+
+        function obtenerCanvasQR() {
+            return document.querySelector('#qrcode canvas');
+        }
+
+        function getCenterImage() {
+            const preset = document.getElementById('qr-escudo-preset').value;
+            if (preset === 'none') return null;
+            if (preset === 'custom') return escudoPersonalizado;
+            return ESCUDOS_PRESETS[preset] || null;
+        }
+
+        function getQRStylingOptions(qrSizeOverride) {
+            const qrSize = qrSizeOverride != null
+                ? qrSizeOverride
+                : parseInt(document.getElementById('qr-size').value, 10);
+            const centerImage = getCenterImage();
+
+            const options = {
+                width: qrSize,
+                height: qrSize,
+                type: 'canvas',
+                data: document.getElementById('url-input').value.trim(),
+                margin: 8,
+                qrOptions: {
+                    errorCorrectionLevel: 'H'
+                },
+                dotsOptions: {
+                    color: document.getElementById('qr-color-dark').value,
+                    type: document.getElementById('qr-dot-style').value
+                },
+                cornersSquareOptions: {
+                    color: document.getElementById('qr-color-dark').value,
+                    type: document.getElementById('qr-corner-square-style').value
+                },
+                cornersDotOptions: {
+                    color: document.getElementById('qr-color-dark').value,
+                    type: document.getElementById('qr-corner-dot-style').value
+                },
+                backgroundOptions: {
+                    color: document.getElementById('qr-color-light').value
+                },
+                imageOptions: {
+                    crossOrigin: 'anonymous',
+                    margin: parseInt(document.getElementById('qr-logo-margin').value, 10),
+                    imageSize: parseInt(document.getElementById('qr-logo-size').value, 10) / 100,
+                    hideBackgroundDots: true
+                }
+            };
+
+            if (centerImage) {
+                options.image = centerImage;
+            }
+
+            return options;
+        }
+
+        function crearQRCanvasAlTamano(targetSize) {
+            return new Promise(function(resolve, reject) {
+                const container = document.createElement('div');
+                container.setAttribute('aria-hidden', 'true');
+                container.style.cssText = 'position:fixed;left:-9999px;top:0;width:' + targetSize + 'px;height:' + targetSize + 'px;opacity:0;pointer-events:none;';
+                document.body.appendChild(container);
+
+                const instance = new QRCodeStyling(getQRStylingOptions(targetSize));
+                instance.append(container);
+
+                const espera = getCenterImage() ? 450 : 80;
+
+                setTimeout(function() {
+                    instance.getRawData('png').then(function(blob) {
+                        document.body.removeChild(container);
+
+                        if (!blob) {
+                            reject(new Error('No se pudo generar el QR'));
+                            return;
+                        }
+
+                        const objectUrl = URL.createObjectURL(blob);
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = targetSize;
+                            canvas.height = targetSize;
+                            const ctx = canvas.getContext('2d');
+                            ctx.imageSmoothingEnabled = false;
+                            ctx.drawImage(img, 0, 0, targetSize, targetSize);
+                            URL.revokeObjectURL(objectUrl);
+                            resolve(canvas);
+                        };
+                        img.onerror = function() {
+                            URL.revokeObjectURL(objectUrl);
+                            reject(new Error('Error al procesar el QR generado'));
+                        };
+                        img.src = objectUrl;
+                    }).catch(function(err) {
+                        if (container.parentNode) {
+                            document.body.removeChild(container);
+                        }
+                        reject(err);
+                    });
+                }, espera);
+            });
+        }
+
+        function dibujarQRNitido(ctx, qrSource, x, y, size) {
+            const srcW = qrSource.naturalWidth || qrSource.width;
+            const srcH = qrSource.naturalHeight || qrSource.height;
+            if (!srcW || !srcH) return;
+
+            const prevSmoothing = ctx.imageSmoothingEnabled;
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(qrSource, 0, 0, srcW, srcH, x, y, size, size);
+            ctx.imageSmoothingEnabled = prevSmoothing;
+        }
+
+        function setShieldPreset(preset) {
+            document.getElementById('qr-escudo-preset').value = preset;
+            document.querySelectorAll('.shield-option').forEach(function(btn) {
+                btn.classList.toggle('active', btn.dataset.shield === preset);
+            });
+
+            const customImg = document.getElementById('shield-preview-custom');
+            const customPlaceholder = document.getElementById('shield-custom-placeholder');
+            if (preset === 'custom' && escudoPersonalizado) {
+                customImg.src = escudoPersonalizado;
+                customImg.hidden = false;
+                customPlaceholder.hidden = true;
+            } else {
+                customImg.hidden = true;
+                customPlaceholder.hidden = false;
+            }
+        }
+
+        function bindRangePair(rangeId, displayId, onChange) {
+            const range = document.getElementById(rangeId);
+            const display = document.getElementById(displayId);
+            const min = parseInt(range.min, 10);
+            const max = parseInt(range.max, 10);
+
+            range.addEventListener('input', function(e) {
+                display.value = e.target.value;
+                onChange();
+            });
+
+            display.addEventListener('input', function(e) {
+                let value = Math.min(max, Math.max(min, parseInt(e.target.value, 10) || min));
+                range.value = value;
+                e.target.value = value;
+                onChange();
+            });
+        }
 
         function mostrarToast(mensaje) {
             const toast = document.getElementById('toast');
@@ -650,6 +1024,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('url-input').value = url;
             document.getElementById('titulo-input').value = titulo;
+            inicializarEscudosPreset();
             inicializarEventos();
             if (url.trim() !== '') {
                 generarQR();
@@ -659,27 +1034,52 @@
         });
 
         function inicializarEventos() {
-            // Sincronizar sliders con inputs numéricos
-            document.getElementById('qr-size').addEventListener('input', function(e) {
-                document.getElementById('qr-size-display').value = e.target.value;
-                generarQR();
-            });
-
-            document.getElementById('qr-size-display').addEventListener('input', function(e) {
-                let value = Math.min(800, Math.max(200, parseInt(e.target.value) || 200));
-                document.getElementById('qr-size').value = value;
-                e.target.value = value;
-                generarQR();
-            });
+            bindRangePair('qr-size', 'qr-size-display', generarQR);
+            bindRangePair('qr-logo-size', 'qr-logo-size-display', generarQR);
+            bindRangePair('qr-logo-margin', 'qr-logo-margin-display', generarQR);
 
             document.getElementById('titulo-size').addEventListener('input', function(e) {
                 document.getElementById('titulo-size-display').value = e.target.value;
             });
 
             document.getElementById('titulo-size-display').addEventListener('input', function(e) {
-                let value = Math.min(60, Math.max(20, parseInt(e.target.value) || 37));
+                let value = Math.min(60, Math.max(20, parseInt(e.target.value, 10) || 37));
                 document.getElementById('titulo-size').value = value;
                 e.target.value = value;
+            });
+
+            ['qr-dot-style', 'qr-corner-square-style', 'qr-corner-dot-style'].forEach(function(id) {
+                document.getElementById(id).addEventListener('change', generarQR);
+            });
+
+            ['qr-color-dark', 'qr-color-light'].forEach(function(id) {
+                document.getElementById(id).addEventListener('input', generarQR);
+            });
+
+            document.getElementById('shield-picker').addEventListener('click', function(e) {
+                const btn = e.target.closest('.shield-option');
+                if (!btn) return;
+
+                const preset = btn.dataset.shield;
+                if (preset === 'custom' && !escudoPersonalizado) {
+                    document.getElementById('escudo-input').click();
+                    return;
+                }
+
+                setShieldPreset(preset);
+                generarQR();
+            });
+
+            document.getElementById('escudo-input').addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        escudoPersonalizado = event.target.result;
+                        setShieldPreset('custom');
+                        generarQR();
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
             });
 
             // Regenerar QR cuando cambia la URL (con debounce)
@@ -726,7 +1126,14 @@
                 actualizarPreviewDecorado();
             });
 
-            document.getElementById('sin-fondo').addEventListener('change', actualizarPreviewDecorado);
+            ['con-titulo', 'con-fondo'].forEach(function(id) {
+                document.getElementById(id).addEventListener('change', function() {
+                    actualizarEstadoControlesDecorado();
+                    actualizarPreviewDecorado();
+                });
+            });
+
+            actualizarEstadoControlesDecorado();
         }
 
         function setPreviewDecoradoVisible(visible) {
@@ -764,30 +1171,126 @@
 
             document.getElementById('qr-placeholder').style.display = 'none';
 
-            let qrSize = parseInt(document.getElementById('qr-size').value);
             let container = document.getElementById('qrcode');
-            
-            // Limpiar contenedor
             container.innerHTML = '';
 
-            // Crear nueva instancia de QR
-            qrInstance = new QRCode(container, {
-                text: url,
-                width: qrSize,
-                height: qrSize,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            const options = getQRStylingOptions();
+            qrInstance = new QRCodeStyling(options);
+            qrInstance.append(container);
 
-            // Actualizar vista previa decorada después de generar el QR
-            setTimeout(() => {
+            setTimeout(function() {
                 actualizarPreviewDecorado();
-            }, 300);
+            }, 350);
+        }
+
+        function getOpcionesDecorado() {
+            return {
+                conTitulo: document.getElementById('con-titulo').checked,
+                conFondo: document.getElementById('con-fondo').checked,
+                tituloColor: document.getElementById('titulo-color').value,
+                tituloSize: parseInt(document.getElementById('titulo-size').value, 10),
+                canvasSize: parseInt(document.getElementById('canvas-size').value, 10)
+            };
+        }
+
+        function actualizarEstadoControlesDecorado() {
+            const conTitulo = document.getElementById('con-titulo').checked;
+            const conFondo = document.getElementById('con-fondo').checked;
+
+            document.getElementById('titulo-color').disabled = !conTitulo;
+            document.getElementById('titulo-size').disabled = !conTitulo;
+            document.getElementById('titulo-size-display').disabled = !conTitulo;
+            document.getElementById('fondo-input').disabled = !conFondo;
+        }
+
+        function calcularLayoutDecorado(size, opts, scaleFactor) {
+            const tituloSizeScaled = opts.conTitulo
+                ? Math.max(16, Math.min(opts.tituloSize * scaleFactor, size * 0.18))
+                : 0;
+            const tituloY = size * 0.05;
+            const espacioTitulo = opts.conTitulo ? tituloY + tituloSizeScaled + 10 : size * 0.05;
+            const espacioInferior = size * 0.05;
+            const altoDisponibleQR = size - espacioTitulo - espacioInferior;
+            const qrSizeInCanvas = Math.floor(Math.min(altoDisponibleQR, size * (opts.conTitulo ? 0.8 : 0.9)));
+            const qrX = (size - qrSizeInCanvas) / 2;
+            const qrY = opts.conTitulo
+                ? espacioTitulo + (altoDisponibleQR - qrSizeInCanvas) / 2
+                : (size - qrSizeInCanvas) / 2;
+
+            return { tituloY, tituloSizeScaled, qrSizeInCanvas, qrX, qrY };
+        }
+
+        function aplicarClipEsquinas(ctx, width, height, radius) {
+            radius = radius || 15;
+            ctx.beginPath();
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(width - radius, 0);
+            ctx.quadraticCurveTo(width, 0, width, radius);
+            ctx.lineTo(width, height - radius);
+            ctx.quadraticCurveTo(width, height, width - radius, height);
+            ctx.lineTo(radius, height);
+            ctx.quadraticCurveTo(0, height, 0, height - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.clip();
+        }
+
+        function dibujarTituloEnCanvas(ctx, width, texto, layout, tituloColor, tituloFontSize) {
+            ctx.fillStyle = tituloColor;
+            ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.font = `bold ${tituloFontSize}px Arial, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillText(texto, width / 2, layout.tituloY);
+            ctx.shadowColor = "transparent";
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        function renderizarDecorado(ctx, qrImage, size, opts, callback) {
+            const scaleFactor = size / opts.canvasSize;
+            const layout = calcularLayoutDecorado(size, opts, scaleFactor);
+            const tituloFontSize = opts.conTitulo
+                ? (scaleFactor < 1 ? layout.tituloSizeScaled : opts.tituloSize)
+                : 0;
+
+            aplicarClipEsquinas(ctx, size, size);
+
+            function finalizar() {
+                dibujarQRNitido(ctx, qrImage, layout.qrX, layout.qrY, layout.qrSizeInCanvas);
+                if (opts.conTitulo) {
+                    dibujarTituloEnCanvas(ctx, size, titulo, layout, opts.tituloColor, tituloFontSize);
+                }
+                if (callback) callback();
+            }
+
+            if (opts.conFondo) {
+                const fondo = new Image();
+                fondo.crossOrigin = "anonymous";
+                fondo.src = imagenFondoCargada || imagenFondo;
+                fondo.onload = function() {
+                    ctx.drawImage(fondo, 0, 0, size, size);
+                    finalizar();
+                };
+                fondo.onerror = function() {
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, size, size);
+                    finalizar();
+                };
+            } else {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, size, size);
+                finalizar();
+            }
         }
 
         function actualizarPreviewDecorado() {
-            let qrCanvas = document.querySelector("#qrcode canvas");
+            let qrCanvas = obtenerCanvasQR();
             if (!qrCanvas) {
                 setPreviewDecoradoVisible(false);
                 return;
@@ -805,114 +1308,18 @@
             qrImage.src = qrCanvas.toDataURL("image/png");
 
             qrImage.onload = function () {
-                let previewCanvas = document.getElementById("preview-decorado");
-                let ctx = previewCanvas.getContext("2d");
+                const opts = getOpcionesDecorado();
+                const previewCanvas = document.getElementById("preview-decorado");
+                const ctx = previewCanvas.getContext("2d");
+                const previewSize = Math.min(opts.canvasSize, 400);
 
-                // Tamaño del canvas final (usar un tamaño fijo para preview, más pequeño)
-                let canvasSize = parseInt(document.getElementById('canvas-size').value);
-                // Para la preview, usar un tamaño máximo de 400px para que se vea bien
-                let previewSize = Math.min(canvasSize, 400);
                 previewCanvas.width = previewSize;
                 previewCanvas.height = previewSize;
+                ctx.clearRect(0, 0, previewSize, previewSize);
 
-                // Limpiar canvas antes de dibujar
-                ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-
-                let sinFondo = document.getElementById('sin-fondo').checked;
-
-                // Crear esquinas redondeadas
-                let radius = 15;
-                ctx.beginPath();
-                ctx.moveTo(radius, 0);
-                ctx.lineTo(previewCanvas.width - radius, 0);
-                ctx.quadraticCurveTo(previewCanvas.width, 0, previewCanvas.width, radius);
-                ctx.lineTo(previewCanvas.width, previewCanvas.height - radius);
-                ctx.quadraticCurveTo(previewCanvas.width, previewCanvas.height, previewCanvas.width - radius, previewCanvas.height);
-                ctx.lineTo(radius, previewCanvas.height);
-                ctx.quadraticCurveTo(0, previewCanvas.height, 0, previewCanvas.height - radius);
-                ctx.lineTo(0, radius);
-                ctx.quadraticCurveTo(0, 0, radius, 0);
-                ctx.closePath();
-                ctx.clip();
-
-                // Calcular tamaño del QR en el canvas (proporcional al tamaño del preview)
-                let scaleFactor = previewSize / canvasSize;
-
-                // Tamaño del título (no demasiado pequeño)
-                let tituloColor = document.getElementById('titulo-color').value;
-                let tituloSize = parseInt(document.getElementById('titulo-size').value);
-                let tituloSizeScaled = Math.max(16, Math.min(tituloSize * scaleFactor, previewSize * 0.18));
-
-                let tituloY = previewSize * 0.05;
-                let espacioTitulo = tituloY + tituloSizeScaled + 10; // espacio para el título + margen
-                let espacioInferior = previewSize * 0.05;
-                let altoDisponibleQR = previewSize - espacioTitulo - espacioInferior;
-
-                let qrSizeInCanvas = Math.floor(Math.min(altoDisponibleQR, previewSize * 0.8));
-                let qrX = (previewSize - qrSizeInCanvas) / 2;
-                let qrY = espacioTitulo + (altoDisponibleQR - qrSizeInCanvas) / 2;
-
-                if (sinFondo) {
-                    // Fondo blanco sin imagen
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-
-                    // Dibujar el QR
-                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
-
-                    // Dibujar título
-                    ctx.fillStyle = tituloColor;
-                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-                    ctx.shadowBlur = 10;
-                    ctx.shadowOffsetX = 2;
-                    ctx.shadowOffsetY = 2;
-                    ctx.font = `bold ${tituloSizeScaled}px Arial, sans-serif`;
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "top";
-                    ctx.fillText(titulo, previewCanvas.width / 2, tituloY);
+                renderizarDecorado(ctx, qrImage, previewSize, opts, function() {
                     setPreviewDecoradoVisible(true);
-                    return;
-                }
-
-                // Usar imagen de fondo personalizada o la por defecto
-                let fondo = new Image();
-                fondo.crossOrigin = "anonymous";
-                
-                if (imagenFondoCargada) {
-                    fondo.src = imagenFondoCargada;
-                } else {
-                    fondo.src = imagenFondo;
-                }
-
-                fondo.onload = function() {
-                    // Dibujar fondo
-                    ctx.drawImage(fondo, 0, 0, previewCanvas.width, previewCanvas.height);
-                    ctx.globalAlpha = 1.0;
-
-                    // Dibujar el QR
-                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
-
-                    ctx.fillStyle = tituloColor;
-                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-                    ctx.shadowBlur = 10;
-                    ctx.shadowOffsetX = 2;
-                    ctx.shadowOffsetY = 2;
-                    ctx.font = `bold ${tituloSizeScaled}px Arial, sans-serif`;
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "top";
-                    ctx.fillText(titulo, previewCanvas.width / 2, tituloY);
-                    setPreviewDecoradoVisible(true);
-                };
-
-                fondo.onerror = function() {
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-                    let qrSizeFallback = Math.floor(previewSize * 0.8);
-                    let qrXf = (previewSize - qrSizeFallback) / 2;
-                    let qrYf = (previewSize - qrSizeFallback) / 2;
-                    ctx.drawImage(qrImage, qrXf, qrYf, qrSizeFallback, qrSizeFallback);
-                    setPreviewDecoradoVisible(true);
-                };
+                });
             };
 
             qrImage.onerror = function() {
@@ -928,160 +1335,44 @@
                 return;
             }
 
-            // Regenerar QR si es necesario
-            if (!qrInstance || !document.querySelector("#qrcode canvas")) {
-                generarQR();
-                setTimeout(() => guardarQR(), 500);
-                return;
-            }
-
-            let loading = document.getElementById('loading');
+            const loading = document.getElementById('loading');
             loading.classList.add('show');
 
-            let qrCanvas = document.querySelector("#qrcode canvas");
-            if (!qrCanvas) {
+            const opts = getOpcionesDecorado();
+            const layout = calcularLayoutDecorado(opts.canvasSize, opts, 1);
+
+            crearQRCanvasAlTamano(layout.qrSizeInCanvas).then(function(qrCanvas) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                canvas.width = opts.canvasSize;
+                canvas.height = opts.canvasSize;
+
+                function descargarImagen() {
+                    const imagenFinal = canvas.toDataURL('image/png');
+                    const nombreArchivo = opts.conTitulo
+                        ? `QR_${titulo.replace(/[^a-z0-9]/gi, '_')}.png`
+                        : 'QR_decorado.png';
+                    const link = document.createElement('a');
+                    link.href = imagenFinal;
+                    link.download = nombreArchivo;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    loading.classList.remove('show');
+                    mostrarExitoGuardado();
+
+                    if (document.getElementById('auto-limpiar').checked) {
+                        setTimeout(() => limpiarDatos(), 1000);
+                    }
+                }
+
+                renderizarDecorado(ctx, qrCanvas, opts.canvasSize, opts, descargarImagen);
+            }).catch(function() {
                 loading.classList.remove('show');
                 alert('Error: No se pudo generar el código QR. Por favor, verifica la URL.');
-                return;
-            }
-
-            let qrImage = new Image();
-            qrImage.src = qrCanvas.toDataURL("image/png");
-
-            qrImage.onload = function () {
-                let canvas = document.createElement("canvas");
-                let ctx = canvas.getContext("2d");
-
-                // Tamaño del canvas final
-                let canvasSize = parseInt(document.getElementById('canvas-size').value);
-                canvas.width = canvasSize;
-                canvas.height = canvasSize;
-
-                let sinFondo = document.getElementById('sin-fondo').checked;
-
-                // Crear esquinas redondeadas
-                let radius = 15;
-                ctx.beginPath();
-                ctx.moveTo(radius, 0);
-                ctx.lineTo(canvas.width - radius, 0);
-                ctx.quadraticCurveTo(canvas.width, 0, canvas.width, radius);
-                ctx.lineTo(canvas.width, canvas.height - radius);
-                ctx.quadraticCurveTo(canvas.width, canvas.height, canvas.width - radius, canvas.height);
-                ctx.lineTo(radius, canvas.height);
-                ctx.quadraticCurveTo(0, canvas.height, 0, canvas.height - radius);
-                ctx.lineTo(0, radius);
-                ctx.quadraticCurveTo(0, 0, radius, 0);
-                ctx.closePath();
-                ctx.clip();
-
-                // Parámetros del título
-                let tituloColor = document.getElementById('titulo-color').value;
-                let tituloSize = parseInt(document.getElementById('titulo-size').value);
-                let tituloY = canvasSize * 0.05;
-
-                // Calcular tamaño del QR en el canvas dejando espacio para el título
-                let espacioTitulo = tituloY + tituloSize + 10;
-                let espacioInferior = canvasSize * 0.05;
-                let altoDisponibleQR = canvasSize - espacioTitulo - espacioInferior;
-                let qrSizeInCanvas = Math.floor(Math.min(altoDisponibleQR, canvasSize * 0.8)); // hasta 80% del alto
-                let qrX = (canvasSize - qrSizeInCanvas) / 2;
-                let qrY = espacioTitulo + (altoDisponibleQR - qrSizeInCanvas) / 2;
-
-                if (sinFondo) {
-                    // Fondo blanco sin imagen
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    // Dibujar el QR
-                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
-
-                    // Dibujar título
-                    ctx.fillStyle = tituloColor;
-                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-                    ctx.shadowBlur = 10;
-                    ctx.shadowOffsetX = 2;
-                    ctx.shadowOffsetY = 2;
-                    ctx.font = `bold ${tituloSize}px Arial, sans-serif`;
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "top";
-                    ctx.fillText(titulo, canvas.width / 2, tituloY);
-
-                    // Descargar imagen
-                    let imagenFinal = canvas.toDataURL("image/png");
-                    let link = document.createElement("a");
-                    link.href = imagenFinal;
-                    link.download = `QR_${titulo.replace(/[^a-z0-9]/gi, '_')}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    loading.classList.remove('show');
-
-                    // Mostrar mensaje de éxito
-                    mostrarExitoGuardado();
-
-                    if (document.getElementById('auto-limpiar').checked) {
-                        setTimeout(() => limpiarDatos(), 1000);
-                    }
-                    return;
-                }
-
-                // Usar imagen de fondo personalizada o la por defecto
-                let fondo = new Image();
-                fondo.crossOrigin = "anonymous";
-                
-                if (imagenFondoCargada) {
-                    fondo.src = imagenFondoCargada;
-                } else {
-                    fondo.src = imagenFondo;
-                }
-
-                fondo.onload = function() {
-                    // Dibujar fondo
-                    ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
-                    ctx.globalAlpha = 1.0;
-
-                    // Dibujar el QR
-                    ctx.drawImage(qrImage, qrX, qrY, qrSizeInCanvas, qrSizeInCanvas);
-
-                    // Agregar título decorativo
-                    ctx.fillStyle = tituloColor;
-                    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-                    ctx.shadowBlur = 10;
-                    ctx.shadowOffsetX = 2;
-                    ctx.shadowOffsetY = 2;
-                    ctx.font = `bold ${tituloSize}px Arial, sans-serif`;
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "top";
-                    ctx.fillText(titulo, canvas.width / 2, tituloY);
-
-                    // Descargar imagen
-                    let imagenFinal = canvas.toDataURL("image/png");
-                    let link = document.createElement("a");
-                    link.href = imagenFinal;
-                    link.download = `QR_${titulo.replace(/[^a-z0-9]/gi, '_')}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    loading.classList.remove('show');
-                    mostrarExitoGuardado();
-
-                    if (document.getElementById('auto-limpiar').checked) {
-                        setTimeout(() => limpiarDatos(), 1000);
-                    }
-                };
-
-                fondo.onerror = function() {
-                    loading.classList.remove('show');
-                    alert('Error al cargar la imagen de fondo. Verifica que la ruta sea correcta.');
-                };
-            };
-
-            qrImage.onerror = function() {
-                loading.classList.remove('show');
-                alert('Error al procesar el código QR.');
-            };
+            });
         }
 
         function mostrarExitoGuardado() {
@@ -1092,24 +1383,22 @@
         }
 
         function descargarQRSimple() {
-            if (!qrInstance || !document.querySelector("#qrcode canvas")) {
-                generarQR();
-                setTimeout(() => descargarQRSimple(), 500);
+            url = document.getElementById('url-input').value.trim();
+            if (!validarURL()) {
                 return;
             }
 
-            let qrCanvas = document.querySelector("#qrcode canvas");
-            if (!qrCanvas) {
+            const qrSize = parseInt(document.getElementById('qr-size').value, 10);
+            crearQRCanvasAlTamano(qrSize).then(function(qrCanvas) {
+                const link = document.createElement('a');
+                link.href = qrCanvas.toDataURL('image/png');
+                link.download = 'codigoQR_simple.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(function() {
                 alert('Error: No se pudo generar el código QR.');
-                return;
-            }
-
-            let link = document.createElement("a");
-            link.href = qrCanvas.toDataURL("image/png");
-            link.download = "codigoQR_simple.png";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            });
         }
 
         function limpiarDatos() {
@@ -1120,7 +1409,19 @@
             // Resetear valores por defecto
             document.getElementById('qr-size').value = 500;
             document.getElementById('qr-size-display').value = 500;
-            document.getElementById('canvas-size').value = 300;
+            document.getElementById('qr-dot-style').value = 'rounded';
+            document.getElementById('qr-corner-square-style').value = 'extra-rounded';
+            document.getElementById('qr-corner-dot-style').value = 'dot';
+            document.getElementById('qr-color-dark').value = '#000000';
+            document.getElementById('qr-color-light').value = '#ffffff';
+            document.getElementById('qr-logo-size').value = 25;
+            document.getElementById('qr-logo-size-display').value = 25;
+            document.getElementById('qr-logo-margin').value = 6;
+            document.getElementById('qr-logo-margin-display').value = 6;
+            setShieldPreset('none');
+            document.getElementById('escudo-input').value = '';
+            escudoPersonalizado = null;
+            document.getElementById('canvas-size').value = 500;
             document.getElementById('titulo-color').value = '#ff0000';
             document.getElementById('titulo-size').value = 37;
             document.getElementById('titulo-size-display').value = 37;
@@ -1142,7 +1443,9 @@
             
             document.getElementById('qr-placeholder').style.display = 'block';
             setPreviewDecoradoVisible(false);
-            document.getElementById('sin-fondo').checked = false;
+            document.getElementById('con-titulo').checked = true;
+            document.getElementById('con-fondo').checked = true;
+            actualizarEstadoControlesDecorado();
             document.getElementById('auto-limpiar').checked = false;
             
             // Limpiar mensajes
